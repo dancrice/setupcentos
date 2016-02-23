@@ -1,0 +1,89 @@
+---
+- hosts: all
+  remote_user: vagrant
+  sudo: yes
+  vars:
+    old_php_packages:
+      - php
+      - php-cli
+      - php-common
+    php_packages:
+      - php56w
+      - php56w-cli
+      - php56w-common
+      - php56w-devel
+      - php56w-fpm
+      - php56w-gd
+      - php56w-imap
+      - php56w-ldap
+      - php56w-mbstring
+      - php56w-opcache
+      - php56w-pdo
+      - php56w-pear
+      - php56w-pecl-apcu
+      - php56w-xml
+      - php56w-xmlrpc
+      - php56w-mysql
+
+  tasks:
+    - name: test connection
+      ping:
+      remote_user: vagrant
+    
+    - name: install webtatic repo
+      yum:
+        name: https://mirror.webtatic.com/yum/el6/latest.rpm
+        state: present
+
+    - name: ensure apache is at the latest version
+      yum:
+        name: httpd
+        state: latest
+    - name: Define php_packages.
+      set_fact:
+        php_packages: "{{ __php_packages | list }}"
+      when: php_packages is not defined
+    
+  #  - name: Ensure PHP installed packages are removed.
+  #    yum:
+  #      name: "{{ item }}"
+  #      state: removed
+  #    with_items: old_php_packages
+  #  
+    - name: Ensure PHP packages are installed.
+      yum:
+        name: "{{ item }}"
+        state: installed
+      with_items: php_packages
+      notify: 
+      - restart httpd
+    
+    
+    - name: Ensure MySQL is stopped
+      service:
+        name: mysqld
+        state: stopped
+      ignore_errors: true
+    
+    - name: Ensure mysql is installed
+      yum:
+        name: http://dev.mysql.com/get/mysql-community-release-el6-5.noarch.rpm
+        state: installed
+    - name: Install MySQL
+      yum: 
+        name: mysql-community-server 
+        state: installed
+    
+    - name: make sure apache is running
+      service: 
+        name: httpd
+        state: running
+    
+
+
+    
+  handlers:
+    - name: restart httpd
+      service:
+        name: httpd
+        state: restarted
