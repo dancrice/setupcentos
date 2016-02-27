@@ -24,6 +24,12 @@
       - php56w-xml
       - php56w-xmlrpc
       - php56w-mysql
+      - php56w-intl
+      - php56w-mcrypt
+      #- php56w-mysqlnd
+      - php56w-pecl-memcached
+      - php56w-pecl-xdebug
+    mysql_password: vagrant
 
   tasks:
     - name: test connection
@@ -55,9 +61,6 @@
         name: "{{ item }}"
         state: installed
       with_items: php_packages
-      notify: 
-      - restart httpd
-    
     
     - name: Ensure MySQL is stopped
       service:
@@ -73,15 +76,34 @@
       yum: 
         name: mysql-community-server 
         state: installed
-    
-    - name: make sure apache is running
+        
+    - name: Install MySQL-python
+      yum: name=MySQL-python state=installed
+      tags: mysql
+      
+    - name: make sure mysql is running
       service: 
-        name: httpd
+        name: mysqld
         state: running
     
-
-
+    - name: Add database user
+      mysql_user: name=vagrant password="{{ mysql_password }}" host=% priv=*.*:ALL
     
+    - name: Link Document root
+      file: src=/vagrant dest=/var/www/html/www state=link
+    
+    - name: Add a vhost conf
+      copy: src=/vagrant/httpd-vshots.conf dest=/etc/httpd/conf.d/httpd-vshots.conf owner=root group=root mode=644 backup=yes
+    
+    - name: restart httpd
+      service:
+        name: httpd
+        state: restarted        
+    - name: Make Sure memcache installed
+      yum:
+        name: memcached
+        state: installed
+        
   handlers:
     - name: restart httpd
       service:
