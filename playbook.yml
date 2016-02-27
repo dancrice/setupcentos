@@ -103,7 +103,10 @@
       yum:
         name: memcached
         state: installed
-        
+    - name: restart memcache
+      service:
+        name: memcached
+        state: restarted    
   handlers:
     - name: restart httpd
       service:
