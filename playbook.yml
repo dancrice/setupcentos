@@ -44,7 +44,7 @@
     - name: ensure apache is at the latest version
       yum:
         name: httpd
-        state: latest
+        state: installed
     - name: Define php_packages.
       set_fact:
         php_packages: "{{ __php_packages | list }}"
