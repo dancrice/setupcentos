@@ -85,7 +85,7 @@
       service: 
         name: mysqld
         state: running
-    
+        enabled: yes
     - name: Add database user
       mysql_user: name=vagrant password="{{ mysql_password }}" host=% priv=*.*:ALL
     
@@ -98,7 +98,8 @@
     - name: restart httpd
       service:
         name: httpd
-        state: restarted        
+        state: restarted
+        enabled: yes
     - name: Make Sure memcache installed
       yum:
         name: memcached
@@ -106,7 +107,8 @@
     - name: restart memcache
       service:
         name: memcached
-        state: restarted    
+        state: restarted
+        enabled: yes
   handlers:
     - name: restart httpd
       service:
