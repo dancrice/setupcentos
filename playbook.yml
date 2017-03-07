@@ -1,7 +1,8 @@
 ---
 - hosts: all
   remote_user: vagrant
-  sudo: yes
+  #sudo: yes
+  become: yes
   vars:
     old_php_packages:
       - php
@@ -29,7 +30,7 @@
       #- php56w-mysqlnd
       - php56w-pecl-memcached
       - php56w-pecl-xdebug
-    mysql_password: vagrant
+   mysql_password: vagrant
 
   tasks:
     - name: test connection
@@ -39,6 +40,11 @@
     - name: install webtatic repo
       yum:
         name: https://mirror.webtatic.com/yum/el6/latest.rpm
+        state: present
+
+    - name: Install remi repo
+      yum:
+        name: http://rpms.remirepo.net/enterprise/remi-release-6.rpm
         state: present
 
     - name: ensure apache is at the latest version
@@ -60,7 +66,39 @@
       yum:
         name: "{{ item }}"
         state: installed
-      with_items: php_packages
+        enablerepo: webtatic,remi-safe
+      with_items:
+      - php56w
+      - php56w-cli
+      - php56w-common
+      - php56w-devel
+      - php56w-fpm
+      - php56w-gd
+      - php56w-imap
+      - php56w-ldap
+      - php56w-mbstring
+      - php56w-opcache
+      - php56w-pdo
+      - php56w-pear
+      - php56w-pecl-apcu
+      - php56w-xml
+      - php56w-xmlrpc
+      - php56w-mysql
+      - php56w-intl
+      - php56w-mcrypt
+      #- php56w-mysqlnd
+      - php56w-pecl-memcached
+      - php56w-pecl-xdebug
+      - php70-php
+      - php70-php-pdo
+      - php70-php-json
+      - php70-php-fpm
+      - php70-php-common
+      - php70-php-mbstring
+      - php70-php-xml
+      - php70-php-gd
+      - php70-php-mysqlnd
+
     
     - name: Ensure MySQL is stopped
       service:
@@ -109,6 +147,18 @@
         name: memcached
         state: restarted
         enabled: yes
+
+    - name: Make sure redis installed
+      yum:
+        name: redis
+        state: installed
+
+    - name: restart redis server
+      service:
+        name: redis
+        state: restarted
+        enabled: yes
+
   handlers:
     - name: restart httpd
       service:
